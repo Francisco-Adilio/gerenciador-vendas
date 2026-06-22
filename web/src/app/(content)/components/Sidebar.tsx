@@ -1,15 +1,15 @@
 'use client';
 
-import { ScrollArea, NavLink, Stack, Box, Title, Divider } from '@mantine/core';
+import { ScrollArea, NavLink, Stack, Box, Title, Divider, ActionIcon, Tooltip } from '@mantine/core';
 import { usePathname, useRouter } from 'next/navigation';
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 
-// Define a estrutura de cada item de menu
 export interface MenuItem {
   label: string;
-  href?: string; // Opcional caso o item tenha submenus
+  href?: string;
   icon?: ReactNode;
-  children?: MenuItem[]; // Suporte para submenus aninhados
+  children?: MenuItem[];
 }
 
 interface SidebarProps {
@@ -18,23 +18,23 @@ interface SidebarProps {
 }
 
 export function Sidebar({ title, menus }: SidebarProps) {
+  const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
-  // Função recursiva para renderizar os menus e submenus
   const renderLinks = (items: MenuItem[]) => {
     return items.map((item, index) => {
-      // Verifica se a rota atual corresponde ao link (ou se inicia com ele no caso de submenus)
       const isActive = item.href ? pathname === item.href : false;
       const isChildActive = item.children?.some(child => child.href && pathname.startsWith(child.href));
 
-      return (
+      // Se estiver colapsado, envolvemos o link em um Tooltip para acessibilidade visual
+      const linkContent = (
         <NavLink
           key={item.label + index}
-          label={item.label}
+          label={collapsed ? '' : item.label} // Oculta o texto quando colapsado
           leftSection={item.icon}
           active={isActive || isChildActive}
-          opened={isChildActive}
+          opened={collapsed ? false : isChildActive} // Evita abrir submenus se colapsado
           onClick={() => {
             if (item.href) {
               router.push(item.href);
@@ -44,14 +44,27 @@ export function Sidebar({ title, menus }: SidebarProps) {
             root: {
               borderRadius: theme.radius.sm,
               marginBottom: 4,
+              justifyContent: collapsed ? 'center' : 'flex-start',
+              padding: collapsed ? '10px 0' : undefined,
               '&[dataActive]': {
                 fontWeight: 600,
               },
             },
+            section: {
+              marginRight: collapsed ? 0 : undefined,
+            },
           })}
         >
-          {item.children ? renderLinks(item.children) : null}
+          {item.children && !collapsed ? renderLinks(item.children) : null}
         </NavLink>
+      );
+
+      return collapsed ? (
+        <Tooltip key={item.label + index} label={item.label} position="right" withArrow transitionProps={{ duration: 150 }}>
+          <Box>{linkContent}</Box>
+        </Tooltip>
+      ) : (
+        linkContent
       );
     });
   };
@@ -59,7 +72,7 @@ export function Sidebar({ title, menus }: SidebarProps) {
   return (
     <Box
       component="nav"
-      w={260}
+      w={collapsed ? 70 : 260} // Controla a largura dinamicamente
       h="100vh"
       p="md"
       style={(theme) => ({
@@ -69,19 +82,37 @@ export function Sidebar({ title, menus }: SidebarProps) {
         borderRight: `1px solid ${theme.colors.gray[3]}`,
         display: 'flex',
         flexDirection: 'column',
+        transition: 'width 200ms ease', // Suaviza a transição de abertura/fechamento
       })}
     >
-      {title && (
-        <>
-          <Box px="xs" py="sm">
-            <Title order={4} c="blue.7">
-              {title}
-            </Title>
-          </Box>
-          <Divider mb="md" />
-        </>
-      )}
+      {/* Cabeçalho com Título e Botão de Alternância */}
+      <Box 
+        display="flex" 
+        style={{ 
+          alignItems: 'center', 
+          justifyContent: collapsed ? 'center' : 'space-between',
+          minHeight: '40px'
+        }}
+        mb="xs"
+      >
+        {title && !collapsed && (
+          <Title order={4} c="blue.7" style={{ whiteSpace: 'nowrap', overflow: 'hidden' }}>
+            {title}
+          </Title>
+        )}
+        
+        <ActionIcon 
+          variant="light" 
+          onClick={() => setCollapsed(!collapsed)}
+          aria-label={collapsed ? "Expandir menu" : "Colapsar menu"}
+        >
+          {collapsed ? <IconChevronRight size={16} /> : <IconChevronLeft size={16} />}
+        </ActionIcon>
+      </Box>
 
+      {!collapsed && <Divider mb="md" />}
+
+      {/* Área dos Links */}
       <ScrollArea style={{ flex: 1 }} mx="-xs" px="xs">
         <Stack gap={0}>
           {renderLinks(menus)}
