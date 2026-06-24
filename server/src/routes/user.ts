@@ -7,7 +7,6 @@ import bcrypt from 'bcrypt'
 const SALT_ROUNDS = 10
 export async function userRoutes(fastify: FastifyInstance) {
   const app = fastify.withTypeProvider<ZodTypeProvider>()  
-  const paramsSchema = z.object({ id: z.coerce.string() })
 
   app.post(
     '/register',
@@ -72,7 +71,7 @@ export async function userRoutes(fastify: FastifyInstance) {
 
       const isMatch = user && (await bcrypt.compare(password, user.password))
       if(!isMatch) {
-        return res.code(401).send("Invalid email or password")
+        return res.code(401).send("Invalid name or password")
       }
 
       const payload = {

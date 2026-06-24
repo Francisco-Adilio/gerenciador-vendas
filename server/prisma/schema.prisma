@@ -12,3 +12,29 @@ model User {
   name     String @unique
   password String
 }
+
+model Product {
+  id        String     @id @default(cuid())
+  name      String
+  value     Float
+  promotion Promotion?
+  sales     Sale[]
+}
+
+model Promotion {
+  id        String  @id @default(cuid())
+  name      String
+  value     Float
+  product   Product @relation(fields: [productId], references: [id])
+  productId String  @unique
+  sales     Sale[]
+}
+
+model Sale {
+  id          String     @id @default(cuid())
+  createdAt   DateTime   @default(now())
+  product     Product    @relation(fields: [productId], references: [id])
+  productId   String
+  promotion   Promotion? @relation(fields: [promotionId], references: [id])
+  promotionId String?
+}
