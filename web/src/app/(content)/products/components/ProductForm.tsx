@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 export interface ProductFormData {
   name: string;
-  price: number;
+  value: number;
 }
 
 interface ProductFormProps {
@@ -18,11 +18,11 @@ interface ProductFormProps {
 export function ProductForm({ title, initialValues, onSubmit }: ProductFormProps) {
   const router = useRouter();
   const [name, setName] = useState(initialValues?.name || '');
-  const [price, setPrice] = useState<number | string>(initialValues?.price || 0);
+  const [value, setValue] = useState<number | string>(initialValues?.value || 0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ name, price: Number(price) });
+    onSubmit({ name, value: Number(value) });
   };
 
   return (
@@ -44,8 +44,8 @@ export function ProductForm({ title, initialValues, onSubmit }: ProductFormProps
             fixedDecimalScale
             required
             min={0}
-            value={price}
-            onChange={setPrice}
+            value={value}
+            onChange={setValue}
           />
           <Group justify="flex-end" mt="md">
             <Button variant="subtle" color="gray" onClick={() => router.push('/products')}>

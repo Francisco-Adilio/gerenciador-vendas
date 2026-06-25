@@ -1,31 +1,32 @@
 'use client';
 
 import { 
-  Box, 
   Button, 
   Center, 
   PasswordInput, 
   TextInput, 
   Title, 
   Paper, 
-  Stack 
+  Stack,
+  Alert
 } from '@mantine/core';
+import { IconAlertCircle } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useActionState, useEffect } from 'react';
+import { loginAction, LoginState } from './actions';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [login, setLogin] = useState('');
-  const [password, setPassword] = useState('');
+  
+  const initialState: LoginState = { success: false, error: null };
+  const [state, formAction, isPending] = useActionState(loginAction, initialState);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Substitua pela sua lógica de autenticação real aqui
-    if (login && password) {
+  useEffect(() => {
+    if (state.success) {
       router.push('/sales');
+      router.refresh();
     }
-  };
+  }, [state.success, router]);
 
   return (
     <Center style={{ width: '100vw', height: '100vh', backgroundColor: '#f8f9fa' }}>
@@ -36,25 +37,37 @@ export default function LoginPage() {
           </Title>
         </Stack>
 
-        <form onSubmit={handleLogin}>
+        {state.error && (
+          <Alert icon={<IconAlertCircle size={16} />} title="Erro" color="red" mb="md">
+            {state.error}
+          </Alert>
+        )}
+
+        <form action={formAction}>
           <Stack>
             <TextInput
               label="Login"
               placeholder="Login"
+              name="name"
               required
-              value={login}
-              onChange={(e) => setLogin(e.target.value)}
+              disabled={isPending}
             />
 
             <PasswordInput
               label="Senha"
-              placeholder="Senha"
+              placeholder="Sua senha"
+              name="password"
               required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              disabled={isPending}
             />
 
-            <Button type="submit" fullWidth mt="md" color="blue">
+            <Button 
+              type="submit" 
+              fullWidth 
+              mt="md" 
+              color="blue"
+              loading={isPending}
+            >
               Entrar
             </Button>
           </Stack>

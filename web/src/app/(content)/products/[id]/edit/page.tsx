@@ -1,21 +1,38 @@
-'use client';
+// app/products/[id]/edit/page.tsx
 import { Container } from '@mantine/core';
-import { useParams } from 'next/navigation';
-import { ProductForm } from '../../components/ProductForm';
+import { ProductForm, ProductFormData } from '../../components/ProductForm';
+import { updateProductAction } from '../../actions';
+import { apiFetch } from '../../../../lib/api';
 
-export default function EditProductPage() {
-  const params = useParams();
-  const productId = params.id;
+interface EditProductPageProps {
+  params: Promise<{ id: string }>;
+}
 
-  // Em um cenário real, você buscaria os dados do produto usando o `productId`
-  const mockProduct = { name: 'Notebook Dell', price: 4500.00 };
+async function getProduct(id: string): Promise<ProductFormData> {
+  const response = await apiFetch(`/products/${id}`);
+
+  if (!response.ok) {
+    throw new Error('Produto não encontrado.');
+  }
+
+  return response.json();
+}
+
+export default async function EditProductPage({ params }: EditProductPageProps) {
+  const { id } = await params;
+  const productData = await getProduct(id);
+
+  const handleSubmit = async (data: ProductFormData) => {
+    'use server';
+    await updateProductAction(id, data);
+  };
 
   return (
-    <Container size="xl">
+    <Container size="xl" py="xl">
       <ProductForm 
-        title={`Editar Produto #${productId}`} 
-        initialValues={mockProduct} 
-        onSubmit={(data) => alert(`Atualizando produto ${productId}: ${JSON.stringify(data)}`)} 
+        title="Editar Produto" 
+        initialValues={productData} 
+        onSubmit={handleSubmit} 
       />
     </Container>
   );
