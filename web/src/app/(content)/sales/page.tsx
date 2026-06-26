@@ -1,5 +1,5 @@
 // app/sales/page.tsx
-import SalesClient, { Sale } from './SalesClient';
+import SalesClient, { SalesResponse } from './SalesClient';
 import { apiFetch } from '../../lib/api';
 import { Product } from '../products/ProductsClient';
 import { Promotion } from '../promotions/PromotionsClient';
@@ -16,7 +16,7 @@ async function getPromotions(): Promise<Promotion[]> {
   return response.json();
 }
 
-async function getSalesHistory(): Promise<Sale[]> {
+async function getSalesResponse(): Promise<SalesResponse> {
   // Chamada limitando ou pegando a listagem geral das últimas vendas da sua API
   const response = await apiFetch('/sales?limit=5');
   if (!response.ok) throw new Error('Erro ao carregar histórico de vendas.');
@@ -25,17 +25,17 @@ async function getSalesHistory(): Promise<Sale[]> {
 
 export default async function SalesPage() {
   // Dispara todas as requisições no servidor paralelamente para velocidade extrema
-  const [products, promotions, history] = await Promise.all([
+  const [products, promotions, salesResponse] = await Promise.all([
     getProducts(),
     getPromotions(),
-    getSalesHistory(),
+    getSalesResponse(),
   ]);
 
   return (
     <SalesClient 
       products={products} 
       promotions={promotions} 
-      initialHistory={history} 
+      salesResponse={salesResponse} 
     />
   );
 }

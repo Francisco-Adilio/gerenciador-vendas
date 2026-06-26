@@ -27,6 +27,7 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
       header: 'Preço', 
       render: (p) => `R$ ${p.value}` 
     },
+    { key: 'actions', header: 'Ações' }
   ];
 
   const handleDelete = async (product: Product) => {

@@ -26,7 +26,7 @@ export async function createSaleAction(data: CreateSaleData) {
 
 export async function refundSaleAction(saleId: string) {
   const response = await apiFetch(`/sales/${saleId}`, {
-    method: 'DELETE', // ou DELETE dependendo do design da sua API
+    method: 'DELETE',
   });
 
   if (!response.ok) {

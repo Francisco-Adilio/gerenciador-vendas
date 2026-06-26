@@ -85,7 +85,7 @@ export async function productRoutes(fastify: FastifyInstance) {
   }, async (request, reply) => {
     try {
       await prisma.product.delete({ where: { id: request.params.id } });
-      return reply.code(204);
+      return reply.code(204).send(null);
     } catch {
       return reply.code(404).send({ error: 'Product not found' });
     }

@@ -73,10 +73,27 @@ export async function saleRoutes(fastify: FastifyInstance) {
   app.get('/', {
     onRequest: [fastify.authenticate],
     schema: {
-      response: { 200: z.array(responseSaleSchema) }
+      response: { 200: z.object({
+        sales: z.array(responseSaleSchema),
+      }).transform(data => {
+        const totals = data.sales.reduce((acc, sale) => {
+          return {
+            totalValue: acc.totalValue + sale.totalValue,
+            totalQuantity: acc.totalQuantity + sale.quantity
+          }
+        }, { totalValue: 0, totalQuantity: 0 })
+      
+        return {
+          sales: data.sales,
+          totalValue: totals.totalValue,
+          totalQuantity: totals.totalQuantity,
+        }
+      })
+    }
     }
   }, async () => {
-    return await prisma.sale.findMany({
+    const sales = await prisma.sale.findMany({
+      orderBy: { createdAt: 'desc' },
       include: { 
         product: true,
         promotion: {
@@ -86,6 +103,8 @@ export async function saleRoutes(fastify: FastifyInstance) {
         }
       }
     });
+
+    return { sales }
   });
 
   app.delete('/:id', {
@@ -97,7 +116,7 @@ export async function saleRoutes(fastify: FastifyInstance) {
   }, async (request, reply) => {
     try {
       await prisma.sale.delete({ where: { id: request.params.id } });
-      return reply.code(204);
+      return reply.code(204).send(null)
     } catch {
       return reply.code(404).send({ error: 'Sale not found' });
     }

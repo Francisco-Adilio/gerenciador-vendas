@@ -1,7 +1,26 @@
 'use client';
 
-import { Container, Title, Paper, Stack, Grid, Select, NumberInput, Button, Divider, Box } from '@mantine/core';
-import { IconShoppingCart, IconEye, IconTrash } from '@tabler/icons-react';
+import { 
+  Container, 
+  Title, 
+  Paper, 
+  Stack, 
+  Grid, 
+  Select, 
+  NumberInput, 
+  Button, 
+  Divider, 
+  Box,
+  SimpleGrid,
+  Text,
+  Group
+} from '@mantine/core';
+import { 
+  IconShoppingCart, 
+  IconTrash, 
+  IconCoin, 
+  IconBox 
+} from '@tabler/icons-react';
 import { useState, useMemo } from 'react';
 import { GenericTable, Column, TableAction } from '../components/GenericTable';
 import { createSaleAction, refundSaleAction } from './actions';
@@ -17,17 +36,23 @@ export interface Sale {
   createdAt: string;
 }
 
+export interface SalesResponse {
+  sales: Sale[];
+  totalValue: number;
+  totalQuantity: number;
+}
+
 interface SalesClientProps {
   products: Product[];
   promotions: Promotion[];
-  initialHistory: Sale[];
+  salesResponse: SalesResponse;
 }
 
-export default function SalesClient({ products, promotions, initialHistory }: SalesClientProps) {
+export default function SalesClient({ products, promotions, salesResponse }: SalesClientProps) {
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedPromotionId, setSelectedPromotionId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState<number | string>(1);
-  const [minQuantity, setMinQuantity] = useState<number>(1)
+  const [minQuantity, setMinQuantity] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filtra as promoções elegíveis baseadas no produto selecionado
@@ -39,15 +64,16 @@ export default function SalesClient({ products, promotions, initialHistory }: Sa
   const handleProductChange = (val: string | null) => {
     setSelectedProductId(val);
     setSelectedPromotionId(null); 
-    setMinQuantity(1)
+    setMinQuantity(1);
   };
 
   const handlePromotionChange = (val: string | null) => {
-    setSelectedPromotionId(val)
-    const promotion = availablePromotions.find(p => p.id === val)
-    const minQty = promotion?.minQuantity || 1
-    setMinQuantity(minQty)
-  }
+    setSelectedPromotionId(val);
+    const promotion = availablePromotions.find(p => p.id === val);
+    const minQty = promotion?.minQuantity || 1;
+    setMinQuantity(minQty);
+    if(Number(quantity) < minQty) setQuantity(minQty);
+  };
 
   // Submit da Venda integrando com a Server Action
   const handlePlaceSale = async (e: React.FormEvent) => {
@@ -66,7 +92,7 @@ export default function SalesClient({ products, promotions, initialHistory }: Sa
       // Limpa os campos após persistir com sucesso no banco através do servidor
       setSelectedProductId(null);
       setSelectedPromotionId(null);
-      setMinQuantity(1)
+      setMinQuantity(1);
       setQuantity(1);
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Erro ao processar venda');
@@ -87,7 +113,7 @@ export default function SalesClient({ products, promotions, initialHistory }: Sa
 
   // Configuração da Tabela Genérica
   const columns: Column<Sale>[] = [
-    { key: 'product', header: 'Produto', render: (sale) => sale.product.name },
+    { key: 'product', header: 'Produto', render: (sale) => sale.product?.name || 'N/A' },
     { key: 'quantity', header: 'Qtd.' },
     { key: 'promotion', header: 'Promoção Aplicada', render: (sale) => sale.promotion?.name || 'Sem Promoção' },
     { 
@@ -95,15 +121,33 @@ export default function SalesClient({ products, promotions, initialHistory }: Sa
       header: 'Total Pago', 
       render: (sale) => `R$ ${sale.totalValue}` 
     },
-    { key: 'createdAt', header: 'Data' },
+    { 
+      key: 'createdAt', 
+      header: 'Data', 
+      render: (sale) => {
+        if (!sale.createdAt) return '-';
+        
+        const date = new Date(sale.createdAt);
+        if (isNaN(date.getTime())) return sale.createdAt; 
+
+        const formatedDate = date.toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+
+        const formatedHour = date.toLocaleTimeString('pt-BR', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        return `${formatedDate} ${formatedHour}`;
+      }
+    },
+    { key: 'actions', header: 'Ações' },
   ];
 
   const actions: TableAction<Sale>[] = [
-    {
-      label: 'Detalhes',
-      icon: <IconEye size={14} />,
-      onClick: (sale) => alert(`Detalhes da venda ID: ${sale.id}`),
-    },
     {
       label: 'Estornar',
       icon: <IconTrash size={14} />,
@@ -117,6 +161,7 @@ export default function SalesClient({ products, promotions, initialHistory }: Sa
       <Stack gap="xl">
         <Title order={2}>Nova Venda</Title>
 
+        {/* Seção do Formulário */}
         <Paper withBorder p="xl" radius="md">
           <form onSubmit={handlePlaceSale}>
             <Grid align="flex-end">
@@ -124,7 +169,7 @@ export default function SalesClient({ products, promotions, initialHistory }: Sa
                 <Select
                   label="Selecione o Produto"
                   placeholder="Escolha o item"
-                  data={products.map((p) => ({ value: p.id, label: `${p.name} (R$ ${p.value.toFixed(2)})` }))}
+                  data={products.map((p) => ({ value: p.id, label: `${p.name} (R$ ${p.value?.toFixed(2)})` }))}
                   required
                   disabled={isSubmitting}
                   value={selectedProductId}
@@ -171,11 +216,37 @@ export default function SalesClient({ products, promotions, initialHistory }: Sa
           </form>
         </Paper>
 
+        {/* BLOCO NOVO: Indicadores Baseados no salesResponse */}
+        <SimpleGrid cols={{ base: 1, sm: 2 }} >
+          <Paper withBorder p="md" radius="md">
+            <Group justify="space-between">
+              <Stack gap={0}>
+                <Text size="xs" color="dimmed" fw={700} tt="uppercase">Valor Total Faturado</Text>
+                <Text size="xl" fw={700}>
+                  R$ {salesResponse.totalValue}
+                </Text>
+              </Stack>
+              <IconCoin size={32} stroke={1.5} color="var(--mantine-color-green-6)" />
+            </Group>
+          </Paper>
+
+          <Paper withBorder p="md" radius="md">
+            <Group justify="space-between">
+              <Stack gap={0}>
+                <Text size="xs" color="dimmed" fw={700} tt="uppercase">Quantidade Total Vendida</Text>
+                <Text size="xl" fw={700}>{salesResponse.totalQuantity} itens</Text>
+              </Stack>
+              <IconBox size={32} stroke={1.5} color="var(--mantine-color-blue-6)" />
+            </Group>
+          </Paper>
+        </SimpleGrid>
+
         <Divider my="md" />
 
+        {/* Seção Tabela */}
         <Box>
-          <Title order={3} mb="md">Últimas 5 Vendas Efetuadas</Title>
-          <GenericTable<Sale> data={initialHistory} columns={columns} actions={actions} rowKey="id" />
+          <Title order={3} mb="md">Vendas Efetuadas</Title>
+          <GenericTable<Sale> data={salesResponse.sales} columns={columns} actions={actions} rowKey="id" />
         </Box>
       </Stack>
     </Container>

@@ -15,7 +15,10 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
 
   // Configura os headers padrões e injeta o token se ele existir
   const headers = new Headers(options.headers);
-  headers.set('Content-Type', 'application/json');
+  
+  if(options.body) {
+    headers.set('Content-Type', 'application/json');
+  }
   
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);

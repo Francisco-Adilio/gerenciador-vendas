@@ -17,6 +17,7 @@ interface PromotionFormProps {
     name: string;
     value: number;
     productId: string;
+    minQuantity?: number
   };
   onSubmit: (data: PromotionFormData) => void;
 }
@@ -26,6 +27,7 @@ export function PromotionForm({ title, products, initialValues, onSubmit }: Prom
   const [name, setName] = useState(initialValues?.name || '');
   const [value, setValue] = useState<number | string>(initialValues?.value || 0);
   const [productId, setProductId] = useState<string | null>(initialValues?.productId || null);
+  const [minQuantity, setMinQuantity] = useState<number | string>(initialValues?.minQuantity || 1)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +66,7 @@ export function PromotionForm({ title, products, initialValues, onSubmit }: Prom
           />
 
           <NumberInput
-            label="Valor do Desconto (R$ ou %)"
+            label="Valor com Desconto (R$)"
             placeholder="0.00"
             decimalScale={2}
             fixedDecimalScale
@@ -72,6 +74,14 @@ export function PromotionForm({ title, products, initialValues, onSubmit }: Prom
             min={0}
             value={value}
             onChange={setValue}
+          />
+
+          <NumberInput
+            label="Quantidade mínima"
+            placeholder="1"
+            min={1}
+            value={minQuantity}
+            onChange={setMinQuantity}
           />
 
           <Group justify="flex-end" mt="md">

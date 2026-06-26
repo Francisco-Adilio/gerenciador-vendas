@@ -78,4 +78,19 @@ export async function promotionRoutes(fastify: FastifyInstance) {
       return reply.code(404).send({ error: 'Promotion not found' });
     }
   });
+
+  app.delete('/:id', {
+    onRequest: [fastify.authenticate],
+    schema: {
+      params: z.object({ id: z.string() }),
+      response: { 204: z.null(), 404: errorSchema }
+    }
+  }, async (request, reply) => {
+    try {
+      await prisma.promotion.delete({ where: { id: request.params.id } });
+      return reply.code(204).send(null)
+    } catch {
+      return reply.code(404).send({ error: 'Promotion not found' });
+    }
+  });
 }

@@ -34,6 +34,7 @@ export default function PromotionsClient({ initialPromotions }: PromotionsClient
       header: 'Desconto', 
       render: (promo) => `R$ ${promo.value.toFixed(2)}` 
     },
+    { key: 'actions', header: 'Ações' }
   ];
 
   const handleDelete = async (promo: Promotion) => {

@@ -11,6 +11,7 @@ async function getPromotionData(id: string) {
     name: promo.name,
     value: promo.value,
     productId: promo.product?.id || '',
+    minQuantity: promo.minQuantity
   };
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { Table, Menu, ActionIcon, Group, Text } from '@mantine/core';
-import { IconDotsVertical, IconEye, IconEdit, IconTrash } from '@tabler/icons-react';
+import { IconDotsVertical } from '@tabler/icons-react';
 import { ReactNode } from 'react';
 
 // Define a estrutura de cada coluna
