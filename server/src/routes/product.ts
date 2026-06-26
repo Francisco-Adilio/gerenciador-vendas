@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma'
 
 // Schemas reutilizáveis
-const productSchema = z.object({
+export const productSchema = z.object({
   id: z.string(),
   name: z.string().min(1),
   value: z.number().positive(),
