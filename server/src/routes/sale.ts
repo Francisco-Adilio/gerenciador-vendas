@@ -15,7 +15,7 @@ const saleSchema = z.object({
 
 const createSaleSchema = z.object({
   productId: z.string(),
-  promotionId: z.string().optional(),
+  promotionId: z.string().nullable(),
   quantity: z.number(),
 })
 
@@ -73,7 +73,7 @@ export async function saleRoutes(fastify: FastifyInstance) {
   app.get('/', {
     onRequest: [fastify.authenticate],
     schema: {
-      response: { 200: z.array(saleSchema) }
+      response: { 200: z.array(responseSaleSchema) }
     }
   }, async () => {
     return await prisma.sale.findMany({
