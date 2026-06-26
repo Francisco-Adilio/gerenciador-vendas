@@ -1,2 +1,2 @@
 -- DropIndex
-DROP INDEX "Promotion_productId_key";
+DROP INDEX IF EXISTS "Promotion_productId_key";
