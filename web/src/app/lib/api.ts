@@ -1,8 +1,7 @@
-// app/lib/api.ts
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-const BASE_URL = 'http://localhost:4000';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // 1. Função reutilizável para pegar o token
 export async function getAuthToken(): Promise<string | null> {
