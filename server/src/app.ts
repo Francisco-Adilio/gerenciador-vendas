@@ -5,11 +5,11 @@ import {
   validatorCompiler, 
   ZodTypeProvider 
 } from 'fastify-type-provider-zod';
-import { userRoutes } from './routes/user';
-import authPlugin from './plugins/auth'
-import { productRoutes } from './routes/product';
-import { promotionRoutes } from './routes/promotion';
-import { saleRoutes } from './routes/sale';
+import { userRoutes } from './routes/user.js';
+import authPlugin from './plugins/auth.js'
+import { productRoutes } from './routes/product.js';
+import { promotionRoutes } from './routes/promotion.js';
+import { saleRoutes } from './routes/sale.js';
 
 const fastify = Fastify({ logger: true }).withTypeProvider<ZodTypeProvider>();
 

@@ -1,8 +1,8 @@
 import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma';
-import { productSchema } from './product';
+import { prisma } from '../lib/prisma.js';
+import { productSchema } from './product.js';
 
 export const promotionSchema = z.object({
   id: z.string(),
