@@ -23,14 +23,16 @@ fastify.register(productRoutes, { prefix: '/products' })
 fastify.register(promotionRoutes, { prefix: '/promotions' })
 fastify.register(saleRoutes, { prefix: '/sales' })
 
-const start = async () => {
-  try {
-    await fastify.listen({ port: 4000, host: '0.0.0.0' });
-    console.log('🚀 Servidor rodando na porta 4000');
-  } catch (err) {
-    fastify.log.error(err);
-    process.exit(1);
-  }
-};
+fastify.get('/', async (request, reply) => {
+  return { hello: 'world' };
+});
 
-start();
+if (process.env.NODE_ENV !== 'production') {
+  fastify.listen({ port: 4000 });
+  console.log('🚀 Servidor rodando na porta 4000');
+}
+
+export default async (request: FastifyRequest, reply: FastifyReply) => {
+  await fastify.ready();
+  fastify.server.emit('request', request, reply);
+};
