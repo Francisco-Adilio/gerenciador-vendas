@@ -5,12 +5,14 @@ import { IconPlus, IconEdit, IconTrash } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { GenericTable, Column, TableAction } from '../components/GenericTable';
 import { deletePromotionAction } from './actions';
+import { Product } from '../products/ProductsClient';
 
 export interface Promotion {
   id: string;
   name: string;
   value: number;
-  productId: string;
+  product: Product;
+  minQuantity: number;
 }
 
 interface PromotionsClientProps {
@@ -23,9 +25,9 @@ export default function PromotionsClient({ initialPromotions }: PromotionsClient
   const columns: Column<Promotion>[] = [
     { key: 'name', header: 'Promoção' },
     { 
-      key: 'productId', 
+      key: 'product', 
       header: 'Produto', 
-      render: (promo) => promo.productId || 'N/A' 
+      render: (promo) => promo.product.name || 'N/A' 
     },
     { 
       key: 'value', 

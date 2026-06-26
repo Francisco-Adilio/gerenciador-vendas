@@ -6,7 +6,6 @@ import { IconPlus, IconEdit, IconTrash } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { GenericTable, Column, TableAction } from '../components/GenericTable';
 import { deleteProductAction } from './actions';
-import { useState } from 'react';
 
 export interface Product {
   id: string;

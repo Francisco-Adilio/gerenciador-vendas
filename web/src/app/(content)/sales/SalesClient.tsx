@@ -10,11 +10,11 @@ import { Promotion } from '../promotions/PromotionsClient';
 
 export interface Sale {
   id: string;
-  productName: string;
+  product: Product;
   quantity: number;
-  promotionLabel: string;
-  totalPrice: number;
-  date: string;
+  promotion?: Promotion;
+  totalValue: number;
+  createdAt: string;
 }
 
 interface SalesClientProps {
@@ -27,18 +27,27 @@ export default function SalesClient({ products, promotions, initialHistory }: Sa
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedPromotionId, setSelectedPromotionId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState<number | string>(1);
+  const [minQuantity, setMinQuantity] = useState<number>(1)
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filtra as promoções elegíveis baseadas no produto selecionado
   const availablePromotions = useMemo(() => {
     if (!selectedProductId) return [];
-    return promotions.filter((prom) => prom.productId === selectedProductId);
+    return promotions.filter((prom) => prom.product.id === selectedProductId);
   }, [selectedProductId, promotions]);
 
   const handleProductChange = (val: string | null) => {
     setSelectedProductId(val);
     setSelectedPromotionId(null); 
+    setMinQuantity(1)
   };
+
+  const handlePromotionChange = (val: string | null) => {
+    setSelectedPromotionId(val)
+    const promotion = availablePromotions.find(p => p.id === val)
+    const minQty = promotion?.minQuantity || 1
+    setMinQuantity(minQty)
+  }
 
   // Submit da Venda integrando com a Server Action
   const handlePlaceSale = async (e: React.FormEvent) => {
@@ -57,6 +66,7 @@ export default function SalesClient({ products, promotions, initialHistory }: Sa
       // Limpa os campos após persistir com sucesso no banco através do servidor
       setSelectedProductId(null);
       setSelectedPromotionId(null);
+      setMinQuantity(1)
       setQuantity(1);
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Erro ao processar venda');
@@ -66,7 +76,7 @@ export default function SalesClient({ products, promotions, initialHistory }: Sa
   };
 
   const handleRefund = async (sale: Sale) => {
-    if (confirm(`Deseja mesmo estornar a venda do item: ${sale.productName}?`)) {
+    if (confirm(`Deseja mesmo estornar a venda do item: ${sale.product.name}?`)) {
       try {
         await refundSaleAction(sale.id);
       } catch (error) {
@@ -77,15 +87,15 @@ export default function SalesClient({ products, promotions, initialHistory }: Sa
 
   // Configuração da Tabela Genérica
   const columns: Column<Sale>[] = [
-    { key: 'productName', header: 'Produto' },
+    { key: 'product', header: 'Produto', render: (sale) => sale.product.name },
     { key: 'quantity', header: 'Qtd.' },
-    { key: 'promotionLabel', header: 'Promoção Aplicada' },
+    { key: 'promotion', header: 'Promoção Aplicada', render: (sale) => sale.promotion?.name || 'Sem Promoção' },
     { 
-      key: 'totalPrice', 
+      key: 'totalValue', 
       header: 'Total Pago', 
-      render: (sale) => `R$ ${sale.value}` 
+      render: (sale) => `R$ ${sale.totalValue}` 
     },
-    { key: 'date', header: 'Data' },
+    { key: 'createdAt', header: 'Data' },
   ];
 
   const actions: TableAction<Sale>[] = [
@@ -129,7 +139,7 @@ export default function SalesClient({ products, promotions, initialHistory }: Sa
                   data={availablePromotions.map((p) => ({ value: p.id, label: p.name }))}
                   disabled={!selectedProductId || availablePromotions.length === 0 || isSubmitting}
                   value={selectedPromotionId}
-                  onChange={setSelectedPromotionId}
+                  onChange={handlePromotionChange}
                   clearable
                 />
               </Grid.Col>
@@ -137,9 +147,9 @@ export default function SalesClient({ products, promotions, initialHistory }: Sa
               <Grid.Col span={{ base: 12, md: 2 }}>
                 <NumberInput
                   label="Quantidade"
-                  min={1}
                   required
                   disabled={isSubmitting}
+                  min={minQuantity}
                   value={quantity}
                   onChange={setQuantity}
                 />
