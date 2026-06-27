@@ -9,6 +9,7 @@ const saleSchema = z.object({
   id: z.string(),
   createdAt: z.date(),
   quantity: z.int(),
+  paymentMethod: z.string(),
   product: productSchema,
   promotion: promotionSchema.omit({ product: true }).nullable()
 });
@@ -17,6 +18,7 @@ const createSaleSchema = z.object({
   productId: z.string(),
   promotionId: z.string().nullable(),
   quantity: z.number(),
+  paymentMethod: z.string(),
 })
 
 const responseSaleSchema = saleSchema.extend({ totalValue: z.number() })
@@ -34,7 +36,7 @@ export async function saleRoutes(fastify: FastifyInstance) {
       response: { 201: responseSaleSchema, 400: errorSchema }
     }
   }, async (request, reply) => {
-    const { productId, promotionId, quantity } = request.body;
+    const { productId, promotionId, quantity, paymentMethod } = request.body;
 
     const [product, promotion] = await Promise.all([
       prisma.product.findUnique({ where: { id: productId } }),
@@ -57,6 +59,7 @@ export async function saleRoutes(fastify: FastifyInstance) {
         data: {
           quantity,
           totalValue,
+          paymentMethod,
           productId,
           promotionId
         },
@@ -64,7 +67,7 @@ export async function saleRoutes(fastify: FastifyInstance) {
         omit: { productId: true, promotionId: true }
       });
       return reply.code(201).send(sale);
-    } catch {
+    } catch(e) {
       return reply.code(400).send({ error: 'Invalid product or promotion association' });
     }
   });

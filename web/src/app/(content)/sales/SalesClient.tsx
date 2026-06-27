@@ -31,6 +31,7 @@ export interface Sale {
   id: string;
   product: Product;
   quantity: number;
+  paymentMethod: string;
   promotion?: Promotion;
   totalValue: number;
   createdAt: string;
@@ -53,6 +54,7 @@ export default function SalesClient({ products, promotions, salesResponse }: Sal
   const [selectedPromotionId, setSelectedPromotionId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState<number | string>(1);
   const [minQuantity, setMinQuantity] = useState<number>(1);
+  const [paymentMethod, setPaymentMethod] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filtra as promoções elegíveis baseadas no produto selecionado
@@ -78,7 +80,7 @@ export default function SalesClient({ products, promotions, salesResponse }: Sal
   // Submit da Venda integrando com a Server Action
   const handlePlaceSale = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedProductId) return;
+    if (!selectedProductId || !paymentMethod) return;
 
     try {
       setIsSubmitting(true);
@@ -87,6 +89,7 @@ export default function SalesClient({ products, promotions, salesResponse }: Sal
         productId: selectedProductId,
         promotionId: selectedPromotionId,
         quantity: Number(quantity),
+        paymentMethod,
       });
 
       // Limpa os campos após persistir com sucesso no banco através do servidor
@@ -120,6 +123,10 @@ export default function SalesClient({ products, promotions, salesResponse }: Sal
       key: 'totalValue', 
       header: 'Total Pago', 
       render: (sale) => `R$ ${sale.totalValue}` 
+    },
+    {
+      key: 'paymentMethod',
+      header: 'Método de Pagamento'
     },
     { 
       key: 'createdAt', 
@@ -165,7 +172,7 @@ export default function SalesClient({ products, promotions, salesResponse }: Sal
         <Paper withBorder p="xl" radius="md">
           <form onSubmit={handlePlaceSale}>
             <Grid align="flex-end">
-              <Grid.Col span={{ base: 12, md: 4 }}>
+              <Grid.Col span={{ base: 12, md: 6 }}>
                 <Select
                   label="Selecione o Produto"
                   placeholder="Escolha o item"
@@ -177,7 +184,7 @@ export default function SalesClient({ products, promotions, salesResponse }: Sal
                 />
               </Grid.Col>
 
-              <Grid.Col span={{ base: 12, md: 4 }}>
+              <Grid.Col span={{ base: 12, md: 6 }}>
                 <Select
                   label="Promoção Aplicável"
                   placeholder={selectedProductId ? "Nenhuma selecionada" : "Selecione um produto primeiro"}
@@ -189,7 +196,7 @@ export default function SalesClient({ products, promotions, salesResponse }: Sal
                 />
               </Grid.Col>
 
-              <Grid.Col span={{ base: 12, md: 2 }}>
+              <Grid.Col span={{ base: 12, md: 4 }}>
                 <NumberInput
                   label="Quantidade"
                   required
@@ -200,7 +207,18 @@ export default function SalesClient({ products, promotions, salesResponse }: Sal
                 />
               </Grid.Col>
 
-              <Grid.Col span={{ base: 12, md: 2 }}>
+              <Grid.Col span={{ base: 12, md: 4 }}>
+                <Select
+                  label="Método de Pagamento"
+                  placeholder="Escolha o método"
+                  data={[{ label: "Pix", value: "Pix" }, { label: "Dinheiro", value: "Dinheiro" }]}
+                  disabled={isSubmitting}
+                  value={paymentMethod}
+                  onChange={setPaymentMethod}
+                />
+              </Grid.Col>
+
+              <Grid.Col span={{ base: 12, md: 4 }}>
                 <Button 
                   type="submit" 
                   color="blue" 

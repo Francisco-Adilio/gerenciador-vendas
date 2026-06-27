@@ -8,6 +8,7 @@ export interface CreateSaleData {
   productId: string;
   promotionId: string | null;
   quantity: number;
+  paymentMethod: string;
 }
 
 export async function createSaleAction(data: CreateSaleData) {

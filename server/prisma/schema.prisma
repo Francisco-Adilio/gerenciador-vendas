@@ -32,12 +32,13 @@ model Promotion {
 }
 
 model Sale {
-  id          String     @id @default(cuid())
-  createdAt   DateTime   @default(now())
-  quantity    Int
-  totalValue  Float
-  product     Product    @relation(fields: [productId], references: [id])
-  productId   String
-  promotion   Promotion? @relation(fields: [promotionId], references: [id])
-  promotionId String?
+  id            String     @id @default(cuid())
+  createdAt     DateTime   @default(now())
+  quantity      Int
+  totalValue    Float
+  paymentMethod String
+  product       Product    @relation(fields: [productId], references: [id])
+  productId     String
+  promotion     Promotion? @relation(fields: [promotionId], references: [id])
+  promotionId   String?
 }
