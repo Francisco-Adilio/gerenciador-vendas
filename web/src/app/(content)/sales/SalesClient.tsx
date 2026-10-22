@@ -22,6 +22,7 @@ import {
   IconBox 
 } from '@tabler/icons-react';
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { GenericTable, Column, TableAction } from '../components/GenericTable';
 import { createSaleAction, refundSaleAction } from './actions';
 import { Product } from '../products/ProductsClient';
@@ -44,12 +45,15 @@ export interface SalesResponse {
 }
 
 interface SalesClientProps {
+  eventId: string;
+  eventName: string;
   products: Product[];
   promotions: Promotion[];
   salesResponse: SalesResponse;
 }
 
-export default function SalesClient({ products, promotions, salesResponse }: SalesClientProps) {
+export default function SalesClient({ eventId, eventName, products, promotions, salesResponse }: SalesClientProps) {
+  const router = useRouter();
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedPromotionId, setSelectedPromotionId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState<number | string>(1);
@@ -86,6 +90,7 @@ export default function SalesClient({ products, promotions, salesResponse }: Sal
       setIsSubmitting(true);
 
       await createSaleAction({
+        eventId,
         productId: selectedProductId,
         promotionId: selectedPromotionId,
         quantity: Number(quantity),
@@ -107,7 +112,7 @@ export default function SalesClient({ products, promotions, salesResponse }: Sal
   const handleRefund = async (sale: Sale) => {
     if (confirm(`Deseja mesmo estornar a venda do item: ${sale.product.name}?`)) {
       try {
-        await refundSaleAction(sale.id);
+        await refundSaleAction(eventId, sale.id);
       } catch (error) {
         alert(error instanceof Error ? error.message : 'Erro ao estornar venda');
       } 
@@ -166,7 +171,10 @@ export default function SalesClient({ products, promotions, salesResponse }: Sal
   return (
     <Container size="xl" py="xl">
       <Stack gap="xl">
-        <Title order={2}>Nova Venda</Title>
+        <Group justify="space-between">
+          <Title order={2}>Vendas - {eventName}</Title>
+          <Button variant="light" onClick={() => router.push('/sales')}>Voltar aos eventos</Button>
+        </Group>
 
         {/* Seção do Formulário */}
         <Paper withBorder p="xl" radius="md">

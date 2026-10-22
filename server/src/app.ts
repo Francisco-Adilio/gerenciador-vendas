@@ -10,6 +10,7 @@ import authPlugin from './plugins/auth.js'
 import { productRoutes } from './routes/product.js';
 import { promotionRoutes } from './routes/promotion.js';
 import { saleRoutes } from './routes/sale.js';
+import { eventRoutes } from './routes/event.js';
 
 const fastify = Fastify({ logger: true }).withTypeProvider<ZodTypeProvider>();
 
@@ -21,7 +22,7 @@ fastify.register(authPlugin)
 fastify.register(userRoutes, { prefix: '/users' })
 fastify.register(productRoutes, { prefix: '/products' })
 fastify.register(promotionRoutes, { prefix: '/promotions' })
-fastify.register(saleRoutes, { prefix: '/sales' })
+fastify.register(eventRoutes, { prefix: '/events' })
 
 fastify.get('/', async (request, reply) => {
   return { hello: 'world' };

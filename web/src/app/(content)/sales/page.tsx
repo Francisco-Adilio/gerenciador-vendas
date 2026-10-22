@@ -1,41 +1,13 @@
-// app/sales/page.tsx
-import SalesClient, { SalesResponse } from './SalesClient';
+import EventsClient, { Event } from './EventsClient';
 import { apiFetch } from '../../lib/api';
-import { Product } from '../products/ProductsClient';
-import { Promotion } from '../promotions/PromotionsClient';
 
-async function getProducts(): Promise<Product[]> {
-  const response = await apiFetch('/products');
-  if (!response.ok) throw new Error('Erro ao carregar produtos.');
-  return response.json();
-}
-
-async function getPromotions(): Promise<Promotion[]> {
-  const response = await apiFetch('/promotions');
-  if (!response.ok) throw new Error('Erro ao carregar promoções.');
-  return response.json();
-}
-
-async function getSalesResponse(): Promise<SalesResponse> {
-  // Chamada limitando ou pegando a listagem geral das últimas vendas da sua API
-  const response = await apiFetch('/sales?limit=5');
-  if (!response.ok) throw new Error('Erro ao carregar histórico de vendas.');
+async function getEvents(): Promise<Event[]> {
+  const response = await apiFetch('/events');
+  if (!response.ok) throw new Error('Erro ao carregar eventos.');
   return response.json();
 }
 
 export default async function SalesPage() {
-  // Dispara todas as requisições no servidor paralelamente para velocidade extrema
-  const [products, promotions, salesResponse] = await Promise.all([
-    getProducts(),
-    getPromotions(),
-    getSalesResponse(),
-  ]);
-
-  return (
-    <SalesClient 
-      products={products} 
-      promotions={promotions} 
-      salesResponse={salesResponse} 
-    />
-  );
+  const events = await getEvents();
+  return <EventsClient initialEvents={events} />;
 }

@@ -13,7 +13,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // 1. Definição dos menus da sua barra lateral
   const navMenus: MenuItem[] = [
     {
-      label: 'Vendas',
+      label: 'Eventos',
       href: '/sales',
       icon: <IconDashboard size={18} />,
     },

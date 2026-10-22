@@ -21,6 +21,10 @@ const createSaleSchema = z.object({
   paymentMethod: z.string(),
 })
 
+const saleParams = z.object({
+  eventId: z.string(),
+})
+
 const responseSaleSchema = saleSchema.extend({ totalValue: z.number() })
 
 const errorSchema = z.object({ error: z.string() })
@@ -28,20 +32,26 @@ const errorSchema = z.object({ error: z.string() })
 export async function saleRoutes(fastify: FastifyInstance) {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
 
-  // CREATE SALE
   app.post('/', {
     onRequest: [fastify.authenticate],
     schema: {
       body: createSaleSchema,
+      params: saleParams,
       response: { 201: responseSaleSchema, 400: errorSchema }
     }
   }, async (request, reply) => {
     const { productId, promotionId, quantity, paymentMethod } = request.body;
+    const { eventId } = request.params
 
-    const [product, promotion] = await Promise.all([
+    const [product, promotion, event] = await Promise.all([
       prisma.product.findUnique({ where: { id: productId } }),
-      promotionId ? prisma.promotion.findUnique({ where: { id: promotionId } }) : null
+      promotionId ? prisma.promotion.findUnique({ where: { id: promotionId } }) : null,
+      prisma.event.findUnique({ where: { id: eventId } })
     ])
+
+    if (!event) {
+      return reply.status(400).send({ error: 'Event not found' });
+    }
 
     if (!product) {
       return reply.status(400).send({ error: 'Product not found' });
@@ -60,11 +70,12 @@ export async function saleRoutes(fastify: FastifyInstance) {
           quantity,
           totalValue,
           paymentMethod,
+          eventId,
           productId,
           promotionId
         },
         include: { product: true, promotion: true },
-        omit: { productId: true, promotionId: true }
+        omit: { productId: true, promotionId: true, eventId: true }
       });
       return reply.code(201).send(sale);
     } catch(e) {
@@ -72,10 +83,10 @@ export async function saleRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // READ ALL SALES
   app.get('/', {
     onRequest: [fastify.authenticate],
     schema: {
+      params: saleParams,
       response: { 200: z.object({
         sales: z.array(responseSaleSchema),
       }).transform(data => {
@@ -94,8 +105,10 @@ export async function saleRoutes(fastify: FastifyInstance) {
       })
     }
     }
-  }, async () => {
+  }, async (request, reply) => {
+    const { eventId } = request.params
     const sales = await prisma.sale.findMany({
+      where: { eventId },
       orderBy: { createdAt: 'desc' },
       include: { 
         product: true,
@@ -113,12 +126,13 @@ export async function saleRoutes(fastify: FastifyInstance) {
   app.delete('/:id', {
     onRequest: [fastify.authenticate],
     schema: {
-      params: z.object({ id: z.string() }),
+      params: saleParams.extend({ id: z.string() }),
       response: { 204: z.null(), 404: errorSchema }
     }
   }, async (request, reply) => {
+    const { eventId, id } = request.params
     try {
-      await prisma.sale.delete({ where: { id: request.params.id } });
+      await prisma.sale.delete({ where: { id, eventId } });
       return reply.code(204).send(null)
     } catch {
       return reply.code(404).send({ error: 'Sale not found' });

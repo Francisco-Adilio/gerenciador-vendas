@@ -13,6 +13,12 @@ model User {
   password String
 }
 
+model Event {
+  id      String    @id @default(cuid())
+  name    String
+  sales   Sale[]
+}
+
 model Product {
   id         String      @id @default(cuid())
   name       String
@@ -41,4 +47,6 @@ model Sale {
   productId     String
   promotion     Promotion? @relation(fields: [promotionId], references: [id])
   promotionId   String?
+  event         Event?      @relation(fields: [eventId], references: [id])
+  eventId       String?
 }

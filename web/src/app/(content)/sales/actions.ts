@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { apiFetch } from '../../lib/api';
 
 export interface CreateSaleData {
+  eventId: string;
   productId: string;
   promotionId: string | null;
   quantity: number;
@@ -12,9 +13,10 @@ export interface CreateSaleData {
 }
 
 export async function createSaleAction(data: CreateSaleData) {
-  const response = await apiFetch('/sales', {
+  const { eventId, ...saleData } = data;
+  const response = await apiFetch(`/events/${eventId}/sales`, {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: JSON.stringify(saleData),
   });
 
   if (!response.ok) {
@@ -22,11 +24,11 @@ export async function createSaleAction(data: CreateSaleData) {
     throw new Error(errorData.message || 'Falha ao registrar a venda.');
   }
 
-  revalidatePath('/sales');
+  revalidatePath(`/sales/${eventId}`);
 }
 
-export async function refundSaleAction(saleId: string) {
-  const response = await apiFetch(`/sales/${saleId}`, {
+export async function refundSaleAction(eventId: string, saleId: string) {
+  const response = await apiFetch(`/events/${eventId}/sales/${saleId}`, {
     method: 'DELETE',
   });
 
@@ -34,5 +36,5 @@ export async function refundSaleAction(saleId: string) {
     throw new Error('Falha ao estornar a venda.');
   }
 
-  revalidatePath('/sales');
+  revalidatePath(`/sales/${eventId}`);
 }

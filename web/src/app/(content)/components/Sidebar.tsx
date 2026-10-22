@@ -24,7 +24,9 @@ export function Sidebar({ title, menus }: SidebarProps) {
 
   const renderLinks = (items: MenuItem[]) => {
     return items.map((item, index) => {
-      const isActive = item.href ? pathname === item.href : false;
+      const isActive = item.href
+        ? pathname === item.href || pathname.startsWith(`${item.href}/`)
+        : false;
       const isChildActive = item.children?.some(child => child.href && pathname.startsWith(child.href));
 
       // Se estiver colapsado, envolvemos o link em um Tooltip para acessibilidade visual
