@@ -39,6 +39,10 @@ export default function CheckoutClient({ eventId, products }: Props) {
   }, []);
   useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
+  // An empty cart has nothing to show: close the phone drawer (e.g. after "Limpar" or removing the last line)
+  const cartEmpty = cart.lines.length === 0;
+  useEffect(() => { if (cartEmpty) drawer.close(); }, [cartEmpty, drawer]);
+
   const pay = async (method: PaymentMethod) => {
     if (pending || cart.lines.length === 0) return;
     const snapshot = cart.lines;
@@ -137,7 +141,7 @@ export default function CheckoutClient({ eventId, products }: Props) {
       </Paper>
 
       <Drawer opened={drawerOpened} onClose={drawer.close} position="bottom" size="auto" withCloseButton={false} padding="md" radius="md">
-        <Cart {...cartProps} listMaxHeight="50dvh" />
+        <Cart {...cartProps} listMaxHeight="50dvh" onBack={drawer.close} />
       </Drawer>
 
       {/* Toast with undo */}

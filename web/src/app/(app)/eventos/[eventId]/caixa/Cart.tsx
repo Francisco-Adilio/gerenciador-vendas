@@ -1,7 +1,7 @@
 'use client';
 
 import { ActionIcon, Button, Chip, Divider, Group, ScrollArea, SimpleGrid, Stack, Text } from '@mantine/core';
-import { IconMinus, IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconArrowLeft, IconMinus, IconPlus, IconTrash } from '@tabler/icons-react';
 import { formatBRL, lineTotal, promotionLabel } from '../../../../lib/pricing';
 import { PAYMENT_COLORS, PAYMENT_LABELS, PAYMENT_METHODS, type PaymentMethod, type Promotion } from '../../../../lib/types';
 import type { CartLine } from './useCart';
@@ -17,15 +17,31 @@ interface Props {
   onPay: (method: PaymentMethod) => void;
   /** Max height for the scrollable list of lines. */
   listMaxHeight?: string;
+  /** When set (phone drawer), shows a back button that closes the cart and keeps its items. */
+  onBack?: () => void;
 }
 
-export function Cart({ lines, total, pending, onIncrement, onDecrement, onChangePromotion, onClear, onPay, listMaxHeight }: Props) {
+export function Cart({ lines, total, pending, onIncrement, onDecrement, onChangePromotion, onClear, onPay, listMaxHeight, onBack }: Props) {
   const empty = lines.length === 0;
 
   return (
     <Stack gap="sm">
-      <Group justify="space-between">
-        <Text fw={700} size="lg">Venda atual</Text>
+      <Group justify="space-between" wrap="nowrap">
+        <Group gap="xs" wrap="nowrap">
+          {onBack && (
+            <Button
+              variant="light"
+              color="gray"
+              size="compact-md"
+              leftSection={<IconArrowLeft size={16} />}
+              onClick={onBack}
+              aria-label="Voltar aos produtos"
+            >
+              Voltar
+            </Button>
+          )}
+          <Text fw={700} size="lg">Venda atual</Text>
+        </Group>
         {!empty && (
           <Button variant="subtle" color="gray" size="compact-sm" leftSection={<IconTrash size={14} />} onClick={onClear} disabled={pending}>
             Limpar
