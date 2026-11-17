@@ -1,7 +1,19 @@
 import './globals.css'
 import '@mantine/core/styles.css';
 
-import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from '@mantine/core';
+import { ColorSchemeScript, createTheme, MantineProvider, mantineHtmlProps } from '@mantine/core';
+import type { Viewport } from 'next';
+
+const theme = createTheme({
+  primaryColor: 'orange',
+  defaultRadius: 'md',
+});
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#fd7e14',
+};
 
 export const metadata = {
   title: 'Gerenciador Vendas',
@@ -16,10 +28,10 @@ export default function RootLayout({
   return (
     <html lang="pt-br" {...mantineHtmlProps}>
       <head>
-        <ColorSchemeScript />
+        <ColorSchemeScript defaultColorScheme="light" />
       </head>
       <body>
-        <MantineProvider>{children}</MantineProvider>
+        <MantineProvider theme={theme} defaultColorScheme="light">{children}</MantineProvider>
       </body>
     </html>
   );

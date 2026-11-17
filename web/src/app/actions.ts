@@ -1,11 +1,14 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { apiFetch } from './lib/api';
+import { LAST_EVENT_COOKIE } from './lib/constants';
 
 export interface LoginState {
   success?: boolean;
   error?: string | null;
+  redirectTo?: string;
 }
 
 export async function loginAction(prevState: LoginState, formData: FormData): Promise<LoginState> {
@@ -15,18 +18,14 @@ export async function loginAction(prevState: LoginState, formData: FormData): Pr
   try {
     const response = await apiFetch('/users/login', {
       method: 'POST',
-      body: JSON.stringify({ name: 'Francisco', password: 'falfal' }),
+      body: JSON.stringify({ name, password }),
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
-      return { 
-        success: false, 
-        error: data.message || 'Credenciais inválidas ou erro no servidor.' 
-      };
+      return { success: false, error: 'Usuário ou senha inválidos.' };
     }
 
+    const data = await response.json();
     const cookieStore = await cookies();
     cookieStore.set('session_token', data.accessToken, {
       httpOnly: true,
@@ -36,13 +35,17 @@ export async function loginAction(prevState: LoginState, formData: FormData): Pr
       path: '/',
     });
 
-    return { success: true, error: null };
-
+    // Go straight to the checkout of the last event used on this device
+    const lastEvent = cookieStore.get(LAST_EVENT_COOKIE)?.value;
+    return { success: true, error: null, redirectTo: lastEvent ? `/eventos/${lastEvent}` : '/eventos' };
   } catch (err) {
-    console.error(err)
-    return { 
-      success: false, 
-      error: 'Não foi possível conectar ao servidor de autenticação.' 
-    };
+    console.error(err);
+    return { success: false, error: 'Não foi possível conectar ao servidor de autenticação.' };
   }
+}
+
+export async function logoutAction() {
+  const cookieStore = await cookies();
+  cookieStore.delete('session_token');
+  redirect('/');
 }

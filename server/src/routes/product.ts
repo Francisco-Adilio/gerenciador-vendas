@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js'
+import { fromCents, toCents } from '../lib/money.js';
 
 // Schemas reutilizáveis
 export const productSchema = z.object({
@@ -17,6 +18,11 @@ const errorSchema = z.object({
   error: z.string()
 });
 
+/** DB product (cents) -> API product (reais). */
+export function productFromCents<T extends { value: number }>(product: T): T {
+  return { ...product, value: fromCents(product.value) };
+}
+
 export async function productRoutes(fastify: FastifyInstance) {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
 
@@ -28,8 +34,10 @@ export async function productRoutes(fastify: FastifyInstance) {
       response: { 201: productSchema }
     }
   }, async (request, reply) => {
-    const product = await prisma.product.create({ data: request.body });
-    return reply.code(201).send(product);
+    const product = await prisma.product.create({
+      data: { ...request.body, value: toCents(request.body.value) }
+    });
+    return reply.code(201).send(productFromCents(product));
   });
 
   // READ ALL
@@ -39,7 +47,8 @@ export async function productRoutes(fastify: FastifyInstance) {
       response: { 200: z.array(productSchema) }
     }
   }, async () => {
-    return await prisma.product.findMany();
+    const products = await prisma.product.findMany();
+    return products.map(productFromCents);
   });
 
   // READ ONE
@@ -52,7 +61,7 @@ export async function productRoutes(fastify: FastifyInstance) {
   }, async (request, reply) => {
     const product = await prisma.product.findUnique({ where: { id: request.params.id } });
     if (!product) return reply.code(404).send({ error: 'Product not found' });
-    return product;
+    return productFromCents(product);
   });
 
   // UPDATE
@@ -64,12 +73,13 @@ export async function productRoutes(fastify: FastifyInstance) {
       response: { 200: productSchema, 404: errorSchema }
     }
   }, async (request, reply) => {
+    const { value, ...rest } = request.body;
     try {
       const product = await prisma.product.update({
         where: { id: request.params.id },
-        data: request.body,
+        data: { ...rest, ...(value !== undefined && { value: toCents(value) }) },
       });
-      return product;
+      return productFromCents(product);
     } catch {
       return reply.code(404).send({ error: 'Product not found' });
     }
@@ -87,7 +97,7 @@ export async function productRoutes(fastify: FastifyInstance) {
       await prisma.product.delete({ where: { id: request.params.id } });
       return reply.code(204).send(null);
     } catch {
-      return reply.code(404).send({ error: 'Product not found' });
+      return reply.code(404).send({ error: 'Produto não encontrado ou em uso (possui vendas ou promoções).' });
     }
   });
 }

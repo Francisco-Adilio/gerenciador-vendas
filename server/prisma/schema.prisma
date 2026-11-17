@@ -14,39 +14,65 @@ model User {
 }
 
 model Event {
-  id      String    @id @default(cuid())
-  name    String
-  sales   Sale[]
+  id       String    @id @default(cuid())
+  name     String
+  sales    Sale[]
+  products Product[]
 }
 
 model Product {
   id         String      @id @default(cuid())
   name       String
-  value      Float
+  value      Int // cents
   promotions Promotion[]
-  sales      Sale[]
+  saleItems  SaleItem[]
+  events     Event[]
+}
+
+enum PromotionType {
+  PERCENTAGE
+  FIXED
+  COMBO
 }
 
 model Promotion {
-  id          String  @id @default(cuid())
-  name        String
-  value       Float
-  minQuantity Int     @default(1)
-  product     Product @relation(fields: [productId], references: [id])
-  productId   String
-  sales       Sale[]
+  id            String        @id @default(cuid())
+  name          String
+  type          PromotionType @default(FIXED)
+  discountValue Int? // FIXED: cents off per unit | PERCENTAGE: whole percent (20 = 20%)
+  totalValue    Int? // COMBO: cents for a bundle of minQuantity units
+  minQuantity   Int           @default(1)
+  product       Product       @relation(fields: [productId], references: [id])
+  productId     String
+  saleItems     SaleItem[]
+}
+
+enum PaymentMethod {
+  PIX
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
 }
 
 model Sale {
-  id            String     @id @default(cuid())
-  createdAt     DateTime   @default(now())
-  quantity      Int
-  totalValue    Float
-  paymentMethod String
-  product       Product    @relation(fields: [productId], references: [id])
-  productId     String
-  promotion     Promotion? @relation(fields: [promotionId], references: [id])
-  promotionId   String?
-  event         Event?      @relation(fields: [eventId], references: [id])
+  id            String        @id @default(cuid())
+  createdAt     DateTime      @default(now())
+  paymentMethod PaymentMethod
+  totalValue    Int // cents, sum of items
+  event         Event?        @relation(fields: [eventId], references: [id])
   eventId       String?
+  items         SaleItem[]
+}
+
+model SaleItem {
+  id          String     @id @default(cuid())
+  quantity    Int
+  unitValue   Int // cents, product price snapshot at sale time
+  totalValue  Int // cents, after promotion
+  sale        Sale       @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  saleId      String
+  product     Product    @relation(fields: [productId], references: [id])
+  productId   String
+  promotion   Promotion? @relation(fields: [promotionId], references: [id])
+  promotionId String?
 }

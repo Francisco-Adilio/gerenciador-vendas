@@ -23,13 +23,13 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (state.success) {
-      router.push('/sales');
+      router.push(state.redirectTo ?? '/eventos');
       router.refresh();
     }
-  }, [state.success, router]);
+  }, [state.success, state.redirectTo, router]);
 
   return (
-    <Center style={{ width: '100vw', height: '100vh', backgroundColor: '#f8f9fa' }}>
+    <Center style={{ minHeight: '100dvh', backgroundColor: 'var(--mantine-color-gray-0)' }} p="md">
       <Paper withBorder shadow="md" p="xl" radius="md" style={{ width: '100%', maxWidth: 400 }}>
         <Stack gap="xs" mb="lg">
           <Title order={2} ta="center" c="blue.7">
